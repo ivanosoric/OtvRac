@@ -1,0 +1,528 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Klubovi API",
+    "version": "1.0.0",
+    "description": "REST API za upravljanje sportskim klubovima (MongoDB Atlas + Express + Mongoose). Svi odgovori su omotani u Response wrapper.",
+    "contact": {
+      "name": "Ivano Sorić",
+      "email": "soric.ivano@gmail.com"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development server"
+    }
+  ],
+  "paths": {
+    "/openapi.json": {
+      "get": {
+        "summary": "Dohvati OpenAPI specifikaciju",
+        "description": "Vraća openapi.json dokument.",
+        "responses": {
+          "200": {
+            "description": "OpenAPI JSON dokument",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/klubovi": {
+      "get": {
+        "summary": "Dohvati sve klubove",
+        "responses": {
+          "200": {
+            "description": "Lista klubova",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperKlubArray" }
+              }
+            }
+          },
+          "500": {
+            "description": "Greška na serveru",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Dodaj novi klub",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/KlubCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Klub kreiran",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperKlub" }
+              }
+            }
+          },
+          "400": {
+            "description": "Neispravan zahtjev / validacija",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperValidationError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Konflikt (Naziv već postoji)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          },
+          "500": {
+            "description": "Greška na serveru",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/klubovi/{id}": {
+      "get": {
+        "summary": "Dohvati klub po ID-u",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "MongoDB ObjectId kluba",
+            "required": true,
+            "schema": { "type": "string", "example": "66c9f5d5f2d2b2a1a1a1a1a1" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Klub dohvaćen",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperKlub" }
+              }
+            }
+          },
+          "400": {
+            "description": "Neispravan ID format",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          },
+          "404": {
+            "description": "Klub ne postoji",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          },
+          "500": {
+            "description": "Greška na serveru",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Ažuriraj klub po ID-u",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "MongoDB ObjectId kluba",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/KlubUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Klub ažuriran",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperKlub" }
+              }
+            }
+          },
+          "400": {
+            "description": "Neispravan ID format ili validacija",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperValidationError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Klub ne postoji",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          },
+          "409": {
+            "description": "Konflikt (Naziv već postoji)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          },
+          "500": {
+            "description": "Greška na serveru",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Obriši klub po ID-u",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "MongoDB ObjectId kluba",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Klub obrisan",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperKlub" }
+              }
+            }
+          },
+          "400": {
+            "description": "Neispravan ID format",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          },
+          "404": {
+            "description": "Klub ne postoji",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          },
+          "500": {
+            "description": "Greška na serveru",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/klubovi/drzava/{drzava}": {
+      "get": {
+        "summary": "Dohvati klubove po državi",
+        "parameters": [
+          {
+            "name": "drzava",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "Hrvatska" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista klubova u državi",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperKlubArray" }
+              }
+            }
+          },
+          "500": {
+            "description": "Greška na serveru",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/klubovi/grad/{grad}": {
+      "get": {
+        "summary": "Dohvati klubove po gradu",
+        "parameters": [
+          {
+            "name": "grad",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "Zagreb" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista klubova u gradu",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperKlubArray" }
+              }
+            }
+          },
+          "500": {
+            "description": "Greška na serveru",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/klubovi/liga/{liga}": {
+      "get": {
+        "summary": "Dohvati klubove po ligi",
+        "parameters": [
+          {
+            "name": "liga",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "HNL" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista klubova u ligi",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperKlubArray" }
+              }
+            }
+          },
+          "500": {
+            "description": "Greška na serveru",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WrapperNull" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "components": {
+    "schemas": {
+      "WrapperBase": {
+        "type": "object",
+        "required": ["status", "message", "response"],
+        "properties": {
+          "status": { "type": "string", "example": "OK" },
+          "message": { "type": "string", "example": "Dohvaćeni klubovi" },
+          "response": {}
+        }
+      },
+
+      "WrapperKlub": {
+        "allOf": [
+          { "$ref": "#/components/schemas/WrapperBase" },
+          {
+            "type": "object",
+            "properties": {
+              "response": { "$ref": "#/components/schemas/Klub" }
+            }
+          }
+        ]
+      },
+
+      "WrapperKlubArray": {
+        "allOf": [
+          { "$ref": "#/components/schemas/WrapperBase" },
+          {
+            "type": "object",
+            "properties": {
+              "response": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/Klub" }
+              }
+            }
+          }
+        ]
+      },
+
+      "WrapperNull": {
+  "allOf": [
+    { "$ref": "#/components/schemas/WrapperBase" },
+    {
+      "type": "object",
+      "properties": {
+        "response": { "nullable": true }
+      }
+    }
+  ]
+},
+
+      "WrapperValidationError": {
+        "allOf": [
+          { "$ref": "#/components/schemas/WrapperBase" },
+          {
+            "type": "object",
+            "properties": {
+              "response": {
+                "type": "object",
+                "properties": {
+                  "details": {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+
+      "Trener": {
+        "type": "object",
+        "required": ["Ime", "Prezime"],
+        "properties": {
+          "Ime": { "type": "string", "example": "Novi" },
+          "Prezime": { "type": "string", "example": "Trener" }
+        }
+      },
+
+      "Igrac": {
+        "type": "object",
+        "required": ["Ime", "Prezime", "Pozicija"],
+        "properties": {
+          "Ime": { "type": "string", "example": "Bruno" },
+          "Prezime": { "type": "string", "example": "Petković" },
+          "Pozicija": { "type": "string", "example": "Napadač" }
+        }
+      },
+
+      "Klub": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "66c9f5d5f2d2b2a1a1a1a1a1" },
+          "Naziv": { "type": "string" },
+          "Grad": { "type": "string" },
+          "Država": { "type": "string" },
+          "Sport": { "type": "string" },
+          "Liga": { "type": "string" },
+          "Godina_osnutka": { "type": "integer", "minimum": 1800 },
+          "Stadion_dvorana": { "type": "string" },
+          "Kapacitet": { "type": "integer", "minimum": 0 },
+          "Glavni_trener": { "$ref": "#/components/schemas/Trener" },
+          "Naslovi_prvaka": { "type": "integer", "minimum": 0, "default": 0 },
+          "Igrači": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Igrac" }
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+
+      "KlubCreate": {
+        "type": "object",
+        "required": [
+          "Naziv",
+          "Grad",
+          "Država",
+          "Sport",
+          "Liga",
+          "Godina_osnutka",
+          "Stadion_dvorana",
+          "Kapacitet",
+          "Glavni_trener"
+        ],
+        "properties": {
+          "Naziv": { "type": "string" },
+          "Grad": { "type": "string" },
+          "Država": { "type": "string" },
+          "Sport": { "type": "string" },
+          "Liga": { "type": "string" },
+          "Godina_osnutka": { "type": "integer", "minimum": 1800 },
+          "Stadion_dvorana": { "type": "string" },
+          "Kapacitet": { "type": "integer", "minimum": 0 },
+          "Glavni_trener": { "$ref": "#/components/schemas/Trener" },
+          "Naslovi_prvaka": { "type": "integer", "minimum": 0, "default": 0 },
+          "Igrači": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Igrac" }
+          }
+        }
+      },
+
+      "KlubUpdate": {
+        "type": "object",
+        "description": "Polja za ažuriranje (možeš poslati samo ono što mijenjaš).",
+        "properties": {
+          "Naziv": { "type": "string" },
+          "Grad": { "type": "string" },
+          "Država": { "type": "string" },
+          "Sport": { "type": "string" },
+          "Liga": { "type": "string" },
+          "Godina_osnutka": { "type": "integer", "minimum": 1800 },
+          "Stadion_dvorana": { "type": "string" },
+          "Kapacitet": { "type": "integer", "minimum": 0 },
+          "Glavni_trener": { "$ref": "#/components/schemas/Trener" },
+          "Naslovi_prvaka": { "type": "integer", "minimum": 0 },
+          "Igrači": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/Igrac" }
+          }
+        }
+      }
+    }
+  }
+}
