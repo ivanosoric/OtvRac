@@ -88,11 +88,39 @@ router.get('/:id', async (req, res) => {
       })
     }
 
+    const klubObj = klub.toObject();
+
+    // JSON-LD: Schema.org mapiranje za tvoja polja
+    const klubJsonLd = {
+      "@context": {
+        "@vocab": "https://schema.org/",
+        "Naziv": "name",
+        "Sport": "sport",
+        "Godina_osnutka": "foundingDate",
+        "Adresa": "address",
+        "Grad": "addressLocality",
+        "Država": "addressCountry"
+      },
+      "@type": "SportsOrganization",
+      "@id": `${req.protocol}://${req.get("host")}${req.originalUrl}`,
+
+      ...klubObj,
+
+      // adresu normaliziramo u Schema.org oblik
+      "Adresa": {
+        "@type": "PostalAddress",
+        "Grad": klubObj.Grad,
+        "Država": klubObj["Država"]
+      }
+    };
+
+
     res.status(200).json({
       status: "OK",
       message: "Klub dohvaćen",
-      response: klub
-    })
+      response: klubJsonLd
+    });
+
   } catch (err) {
         if (err && err.name === "CastError") {
             return res.status(400).json({
